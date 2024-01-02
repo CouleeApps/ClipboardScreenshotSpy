@@ -24,45 +24,49 @@ import Cocoa
 class AppDelegate: NSObject, NSApplicationDelegate {
 
   @IBOutlet var menu: NSMenu!
-  var lastHash: Data? = nil;
+  var lastChangeCount: Int!;
+  var lastHash: Data!;
   var statusBar: NSStatusBar!;
   var statusItem: NSStatusItem!;
 
-
   func applicationDidFinishLaunching(_ aNotification: Notification) {
-    // Insert code here to initialize your application
-    lastHash = HashPasteboard();
-
+    // Set up menu bar icon
     NSApp.setActivationPolicy(.accessory);
-
     self.statusBar = NSStatusBar.system;
-
     self.statusItem = self.statusBar.statusItem(withLength: NSStatusItem.variableLength);
     if let button = self.statusItem.button {
-      button.image = NSImage(systemSymbolName: "photo", accessibilityDescription: nil)
+      // TODO: Do I want to use a real icon?
+      button.image = NSImage(systemSymbolName: "photo", accessibilityDescription: nil);
     }
     self.statusItem.menu = self.menu;
 
+    // Initial state, seeded with state on startup so you don't always save the
+    // clipboard contents when the app is opened
+    let board = NSPasteboard.general;
+    self.lastChangeCount = board.changeCount;
+    self.lastHash = HashPasteboard();
+
+    // Start up polling loop (the whole thing)
     let timer = Timer(timeInterval: 1, repeats: true) { _ in
-      if CheckPasteboard() {
+
+      // Opimization: If the clipboard hasn't changed, don't bother checking it
+      if self.lastChangeCount == board.changeCount {
+        return;
+      }
+      self.lastChangeCount = board.changeCount;
+
+      // If the clipboard does contain a screenshot, save it
+      if let bitmap = CheckPasteboard() {
+        // If the screenshot is the same one as last time, don't save a duplicate
+        // TODO: Is this necessary (or even possible to fail?)
         let hash = HashPasteboard();
         if self.lastHash != hash {
           self.lastHash = hash;
-          print("Saving next image...");
-          SavePasteboard();
+          SavePasteboard(bitmap: bitmap);
         }
       }
     };
     RunLoop.current.add(timer, forMode: .default);
   }
-
-  func applicationWillTerminate(_ aNotification: Notification) {
-    // Insert code here to tear down your application
-  }
-
-  func applicationSupportsSecureRestorableState(_ app: NSApplication) -> Bool {
-    return true
-  }
-
 }
 
