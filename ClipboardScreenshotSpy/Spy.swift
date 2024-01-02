@@ -61,24 +61,41 @@ func ScreenshotLocation(_ then: @escaping (URL) -> Void) {
     panel.directoryURL = absolute;
     panel.canChooseDirectories = true;
     panel.canChooseFiles = false;
+    panel.message = "To grant access to screenshots directory, press Open. Something something macOS sandbox :)";
     panel.begin { response in
-      if response == .OK {
-        if !panel.urls.isEmpty {
-          let url = panel.urls[0];
-          do {
-            // Save a bookmark to this url with a security scope so we can write
-            // to there in the future
-            let bookmark = try url.bookmarkData(options: .withSecurityScope, includingResourceValuesForKeys: nil, relativeTo: nil);
-            defaults.setValue(bookmark, forKey: "PathToFolder");
-            defaults.synchronize();
-
-            then(url.absoluteURL);
-          } catch {
-            // TODO: How to handle errors for this
-            NSApp.presentError(error);
-          }
-        }
+      if response != .OK || panel.urls.isEmpty {
+        NSApp.terminate(nil);
+        return;
       }
+      let url = panel.urls[0];
+      do {
+        // Save a bookmark to this url with a security scope so we can write
+        // to there in the future
+        let bookmark = try url.bookmarkData(options: .withSecurityScope, includingResourceValuesForKeys: nil, relativeTo: nil);
+        defaults.setValue(bookmark, forKey: "PathToFolder");
+        defaults.synchronize();
+
+        then(url.absoluteURL);
+      } catch {
+        // TODO: How to handle errors for this
+        NSApp.presentError(error);
+      }
+    }
+  } else {
+    let alert = NSAlert();
+    alert.messageText = "No screenshots directory specified. Press Cmd+Shift+5 and choose a directory from the popup.";
+    alert.addButton(withTitle: "Retry");
+    alert.addButton(withTitle: "Exit");
+    let response = alert.runModal();
+    if response == .alertFirstButtonReturn {
+      // Try again? Tailcall
+      return ScreenshotLocation(then);
+    } else if response == .alertSecondButtonReturn {
+      // Exit
+      NSApp.terminate(nil);
+    } else {
+      // ???
+      NSApp.terminate(nil);
     }
   }
 }
