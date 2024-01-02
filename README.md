@@ -3,11 +3,11 @@ _Make Ctrl+Cmd+Shift+4 save files to my Desktop too_
 
 ## What It Does
 
-When taking screenshots while holding Ctrl, they are now saved to both
-your clipboard and your specified screenshots directory. That way you
-both get the convenience of a screenshot on your clipboard, and the
-historical value of a screenshots folder with 1000s of pictures that
-you can look back upon and reminisce.
+When taking Cmd+Shift+4 screenshots while holding Ctrl, they are now
+saved to both your clipboard and your specified screenshots
+directory. That way you both get the convenience of a screenshot on
+your clipboard, and the historical value of a screenshots folder with
+1000s of pictures that you can look back upon and reminisce.
 
 ## Why You Would Want This
 
